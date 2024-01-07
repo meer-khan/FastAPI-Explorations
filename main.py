@@ -35,7 +35,10 @@ def find_post(id):
         if i["id"] == id:
             return i
 
-
+def find_index_post(id):
+    for i , p in enumerate(my_posts):
+        if p["id"] == id:
+            return i
 
 @app.get("/")
 async def root():
@@ -72,3 +75,5 @@ async def get_posts(id:str,response: Response):
         #* 3rd and BEST WAY OF SETTING RESPONSE
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     return {"data": post}
+
+
