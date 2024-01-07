@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from models.post_model import Post
 import uuid
@@ -20,8 +20,22 @@ my_posts = [
         "published": True,
         "rating": 5,
         "id": "f2615b82-f2ff-4003-96f0-ef05eca94ce6"
+    },
+        {
+        "title": "Nike Pegasus 39",
+        "content": "A cool looking shoe for running",
+        "published": True,
+        "rating": 5,
+        "id": 123
     }
     ]
+
+def find_post(id): 
+    for i in my_posts: 
+        if i["id"] == id:
+            return i
+
+
 
 @app.get("/")
 async def root():
@@ -32,7 +46,7 @@ async def root():
 async def get_posts():
     return {"data": my_posts} #FastAPI directly converts this into JSON 
 
-@app.post("/posts")
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 # async def create_posts(payload: dict = Body(...)):
 async def create_posts(new_post: Post):
     new_post = new_post.model_dump()
@@ -44,5 +58,17 @@ async def create_posts(new_post: Post):
 
 
 @app.get("/posts/{id}")
-async def get_posts():
-    return {"data": my_posts}
+async def get_posts(id:str,response: Response):
+    post = find_post(id)
+    if post is None: 
+
+        # *FIRST WAY TO SETTING RESPONSE 
+        # response.status_code = 404
+
+        # *2nd WAY OF SETTING RESPONSE
+        # response.status_code = status.HTTP_404_NOT_FOUND
+        # return {"msg": f"Post with id {id} not found"}
+
+        #* 3rd and BEST WAY OF SETTING RESPONSE
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
+    return {"data": post}
