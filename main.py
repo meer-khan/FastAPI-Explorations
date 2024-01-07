@@ -76,10 +76,13 @@ async def get_posts(id:str,response: Response):
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     return {"data": post}
 
-@app.delete("/posts/{id}", status_code=status.HTTP_200_OK)
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id):
     post_index = find_index_post(id)
+
     if post_index is None: 
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     my_posts.pop(post_index)
-    return {"msg": "post was successfully deleted"}
+    # return {"msg": "post was successfully deleted"} 
+    # * We donot need to return anything on delete request, even if we return anything, FastAPI will not return anything by default 
+    # So there is no point of writing return statement on delete request
