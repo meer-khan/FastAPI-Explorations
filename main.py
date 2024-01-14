@@ -67,6 +67,7 @@ async def get_posts(id:str,response: Response):
 
         # *FIRST WAY TO SETTING RESPONSE 
         # response.status_code = 404
+        # return {"msg": f"Post with id {id} not found"}
 
         # *2nd WAY OF SETTING RESPONSE
         # response.status_code = status.HTTP_404_NOT_FOUND
@@ -74,6 +75,9 @@ async def get_posts(id:str,response: Response):
 
         #* 3rd and BEST WAY OF SETTING RESPONSE
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
+    
+        #* 4th way is described in the delete method
+        # in which we set the status code in the decorator
     return {"data": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -86,3 +90,9 @@ def delete_post(id):
     # return {"msg": "post was successfully deleted"} 
     # * We donot need to return anything on delete request, even if we return anything, FastAPI will not return anything by default 
     # So there is no point of writing return statement on delete request
+
+
+@app.put("/posts/{id}")
+def update_post(id, post:Post):
+    print(post)
+    return {"message" : "updated post"}
