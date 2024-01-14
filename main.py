@@ -2,6 +2,8 @@ from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from models.post_model import Post
 import uuid
+from icecream import ic
+
 app = FastAPI()
 
 
@@ -95,4 +97,13 @@ def delete_post(id):
 @app.put("/posts/{id}")
 def update_post(id, post:Post):
     print(post)
+    post_index = find_index_post(id)
+
+    if post_index is None: 
+        raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
+    
+    post_dict = post.model_dump()
+    # post_dict['id'] = id 
+    ic(post_dict)
+
     return {"message" : "updated post"}
