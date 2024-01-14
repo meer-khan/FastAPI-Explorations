@@ -103,7 +103,8 @@ def update_post(id, post:Post):
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     
     post_dict = post.model_dump()
-    # post_dict['id'] = id 
+    post_dict['id'] = id 
     ic(post_dict)
+    my_posts[post_index] = post_dict
 
-    return {"message" : "updated post"}
+    return {"message" : my_posts[post_index]}
