@@ -1,12 +1,22 @@
 from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
-from models.post_model import Post
+from post_model import Post
 import uuid
 from icecream import ic
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from decouple import config
 
 app = FastAPI()
 
-
+try:
+    conn = psycopg2.connect(host= 'localhost' , dbname= "fastapi", 
+                        user='postgres', port=5432, password=config("DB_PASSWORD"), 
+                        cursor_factory=RealDictCursor)
+    cursor = conn.cursor()
+    print("Database connection was successfull")
+except Exception as ex:
+    raise Exception(ex)
 
 my_posts = [
     {
@@ -51,6 +61,8 @@ async def root():
 async def get_posts():
     return {"data": my_posts} #FastAPI directly converts this into JSON 
 
+
+# create post
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 # async def create_posts(payload: dict = Body(...)):
 async def create_posts(new_post: Post):
@@ -75,7 +87,7 @@ async def get_posts(id:str,response: Response):
         # response.status_code = status.HTTP_404_NOT_FOUND
         # return {"msg": f"Post with id {id} not found"}
 
-        #* 3rd and BEST WAY OF SETTING RESPONSE
+        #* 3rd OF SETTING RESPONSE
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     
         #* 4th way is described in the delete method
@@ -98,11 +110,12 @@ def delete_post(id):
 def update_post(id, post:Post):
     print(post)
     post_index = find_index_post(id)
-
+    ic(post_index)
     if post_index is None: 
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
     
     post_dict = post.model_dump()
+    ic(post_dict)
     post_dict['id'] = id 
     ic(post_dict)
     my_posts[post_index] = post_dict
