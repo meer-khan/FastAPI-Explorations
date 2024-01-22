@@ -59,25 +59,38 @@ async def root():
 
 @app.get("/posts")
 async def get_posts():
-    return {"data": my_posts} #FastAPI directly converts this into JSON 
+    cursor.execute("SELECT * FROM posts")
+    posts = cursor.fetchall()
+    return {"data": posts} #FastAPI directly converts this into JSON 
 
 
 # create post
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 # async def create_posts(payload: dict = Body(...)):
-async def create_posts(new_post: Post):
-    new_post = new_post.model_dump()
-    new_post['id'] = str(uuid.uuid4())
-    my_posts.append(new_post)
+async def create_posts(post: Post):
+    # * %s protects us from SQL injections
+        # We can write query like INSERT INTO posts (title, content, published) VALUSE ({title}, {content}, {published})
+        # using the f string but some user can pass the SQL statements directly into these variables 
+        # to prevent this we use %s statement to sanitize the values coming from the user's end and then pass to the query
+    
+    # RETURNING * will return the newly created object
+    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *", 
+                   (post.title, post.content, post.published) ) 
+    new_post = cursor.fetchone()
 
+    # it will store information in the database
+    conn.commit()
 
     return {"message": new_post} #FastAPI directly converts this into JSON 
 
 
 @app.get("/posts/{id}")
-async def get_posts(id:str,response: Response):
-    post = find_post(id)
-    if post is None: 
+async def get_posts(id:int,response: Response):
+    # We cannot use VALUES keyword in the select statement, this is against SQL syntax. 
+    # VALUES keyword is specifically designed for the INSERT Statements
+    cursor.execute("SELECT * FROM posts WHERE id = (%s)", (id,))
+    post = cursor.fetchone()
+    if not post: 
 
         # *FIRST WAY TO SETTING RESPONSE 
         # response.status_code = 404
@@ -95,29 +108,23 @@ async def get_posts(id:str,response: Response):
     return {"data": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id):
-    post_index = find_index_post(id)
-
-    if post_index is None: 
+def delete_post(id:int):
+    cursor.execute("DELETE FROM posts WHERE id = (%s) RETURNING *", (id,))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+    if not deleted_post: 
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
-    my_posts.pop(post_index)
     # return {"msg": "post was successfully deleted"} 
     # * We donot need to return anything on delete request, even if we return anything, FastAPI will not return anything by default 
     # So there is no point of writing return statement on delete request
 
 
 @app.put("/posts/{id}")
-def update_post(id, post:Post):
-    print(post)
-    post_index = find_index_post(id)
-    ic(post_index)
-    if post_index is None: 
+def update_post(id:int, post:Post):
+    cursor.execute("UPDATE posts SET title=%s, content = %s, published = %s WHERE id = %s RETURNING *",
+                   (post.title, post.content, post.published, id))
+    updated_post = cursor.fetchone()
+    conn.commit()
+    if updated_post is None: 
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} not found")
-    
-    post_dict = post.model_dump()
-    ic(post_dict)
-    post_dict['id'] = id 
-    ic(post_dict)
-    my_posts[post_index] = post_dict
-
-    return {"message" : my_posts[post_index]}
+    return {"message" : updated_post}
