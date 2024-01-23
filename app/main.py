@@ -1,11 +1,18 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from post_model import Post
 import uuid
 from icecream import ic
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
 from decouple import config
+import models
+from database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
+
+
 
 app = FastAPI()
 
@@ -51,6 +58,15 @@ def find_index_post(id):
     for i , p in enumerate(my_posts):
         if p["id"] == id:
             return i
+        
+@app.get("/sqlalchemy")
+async def test(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    print(type(posts))
+    print(posts)
+    return {"status": posts}
+
+
 
 @app.get("/")
 async def root():
