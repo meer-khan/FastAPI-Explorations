@@ -1,17 +1,16 @@
-from database import Base , Integer
-from sqlalchemy import Column
-from typing import List
-from sqlalchemy import ForeignKey
-from typing import Optional
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from database import Base 
+from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.sql.expression import text
 
 
 # Following SQLALCHEMY 2.0 Documentation
 # https://docs.sqlalchemy.org/en/20/orm/quickstart.html
 class Post(Base):
-    __tablename__ = 'posts'
-    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    published = Column(Boolean, server_default='TRUE', nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable = False, server_default = text('now()'))
