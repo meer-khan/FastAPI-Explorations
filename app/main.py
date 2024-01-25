@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
-from schemas import Post
+from schemas import Post, PostBase
 import uuid
 from icecream import ic
 import psycopg2
@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 from decouple import config
 import models
 from database import engine, get_db
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI()
 
@@ -71,19 +71,20 @@ def find_index_post(id):
 async def root():
     return {"message": "Hello World"}  # FastAPI directly converts this into JSON
 
-
-@app.get("/posts")
+# we can use List from typing library and we can also use list[Post] from python directly 
+# Reference: https://fastapi.tiangolo.com/tutorial/response-model/#response_model-parameter
+@app.get("/posts", response_model= List[Post])
 async def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return  posts  # FastAPI directly converts this into JSON
-
+    # return  posts  # FastAPI directly converts this into JSON
+    return posts
 
 # create post
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model = Post)
 # async def create_posts(payload: dict = Body(...)):
-async def create_posts(post: Post, db: Session = Depends(get_db)):
+async def create_posts(post: PostBase, db: Session = Depends(get_db)):
     # * %s protects us from SQL injections
     # We can write query like INSERT INTO posts (title, content, published) VALUSE ({title}, {content}, {published})
     # using the f string but some user can pass the SQL statements directly into these variables
@@ -107,11 +108,12 @@ async def create_posts(post: Post, db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-
+    ic(type(new_post))
+    ic(new_post.title)
     return new_post # FastAPI directly converts this into JSON
 
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model= Post)
 async def get_posts(id: int, response: Response, db: Session = Depends(get_db)):
     # We cannot use VALUES keyword in the select statement, this is against SQL syntax.
     # VALUES keyword is specifically designed for the INSERT Statements
@@ -158,8 +160,8 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK, response_model = Post)
+def update_post(id: int, post: PostBase, db: Session = Depends(get_db)):
     # cursor.execute(
     #     "UPDATE posts SET title=%s, content = %s, published = %s WHERE id = %s RETURNING *",
     #     (post.title, post.content, post.published, id),
