@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
-from schemas import Post, PostBase
+from schemas import Post, PostBase, UserCreate, UserOut
 import uuid
 from icecream import ic
 import psycopg2
@@ -180,3 +180,15 @@ def update_post(id: int, post: PostBase, db: Session = Depends(get_db)):
     post_query.update(post.model_dump(exclude="rating"), synchronize_session=False)
     db.commit()
     return post_query.first()
+
+
+
+
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model= UserOut, response_model_exclude= ["password","id"])
+async def create_posts(user: UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
