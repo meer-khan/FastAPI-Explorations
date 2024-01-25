@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
-from app.schemas import Post
+from schemas import Post
 import uuid
 from icecream import ic
 import psycopg2
@@ -77,7 +77,7 @@ async def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {"data": posts}  # FastAPI directly converts this into JSON
+    return  posts  # FastAPI directly converts this into JSON
 
 
 # create post
@@ -108,7 +108,7 @@ async def create_posts(post: Post, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_post)
 
-    return {"message": new_post}  # FastAPI directly converts this into JSON
+    return new_post # FastAPI directly converts this into JSON
 
 
 @app.get("/posts/{id}")
@@ -135,7 +135,7 @@ async def get_posts(id: int, response: Response, db: Session = Depends(get_db)):
 
         # * 4th way is described in the delete method
         # in which we set the status code in the decorator
-    return {"data": post}
+    return post
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -177,4 +177,4 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db)):
 
     post_query.update(post.model_dump(exclude="rating"), synchronize_session=False)
     db.commit()
-    return {"message": post_query.first()}
+    return post_query.first()
