@@ -73,9 +73,10 @@ def find_index_post(id):
 async def root():
     return {"message": "Hello World"}  # FastAPI directly converts this into JSON
 
-# we can use List from typing library and we can also use list[Post] from python directly 
+
+# we can use List from typing library and we can also use list[Post] from python directly
 # Reference: https://fastapi.tiangolo.com/tutorial/response-model/#response_model-parameter
-@app.get("/posts", response_model= List[Post])
+@app.get("/posts", response_model=List[Post])
 async def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
@@ -83,8 +84,14 @@ async def get_posts(db: Session = Depends(get_db)):
     # return  posts  # FastAPI directly converts this into JSON
     return posts
 
+
 # create post
-@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model = Post, response_model_exclude=["title", "content"])
+@app.post(
+    "/posts",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Post,
+    response_model_exclude=["title", "content"],
+)
 # async def create_posts(payload: dict = Body(...)):
 async def create_posts(post: PostBase, db: Session = Depends(get_db)):
     # * %s protects us from SQL injections
@@ -113,10 +120,10 @@ async def create_posts(post: PostBase, db: Session = Depends(get_db)):
     ic(new_post)
     ic(type(new_post))
     ic(new_post.title)
-    return new_post # FastAPI directly converts this into JSON
+    return new_post  # FastAPI directly converts this into JSON
 
 
-@app.get("/posts/{id}", response_model= Post)
+@app.get("/posts/{id}", response_model=Post)
 async def get_posts(id: int, response: Response, db: Session = Depends(get_db)):
     # We cannot use VALUES keyword in the select statement, this is against SQL syntax.
     # VALUES keyword is specifically designed for the INSERT Statements
@@ -163,7 +170,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-@app.put("/posts/{id}", status_code=status.HTTP_200_OK, response_model = Post)
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK, response_model=Post)
 def update_post(id: int, post: PostBase, db: Session = Depends(get_db)):
     # cursor.execute(
     #     "UPDATE posts SET title=%s, content = %s, published = %s WHERE id = %s RETURNING *",
@@ -185,15 +192,19 @@ def update_post(id: int, post: PostBase, db: Session = Depends(get_db)):
     return post_query.first()
 
 
-
-
-
-@app.post("/users", status_code=status.HTTP_201_CREATED, response_model= UserOut, response_model_exclude= ["password","id"])
+@app.post(
+    "/users",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserOut,
+    response_model_exclude=["password", "id"],
+)
 async def create_posts(user: UserCreate, db: Session = Depends(get_db)):
+
+    hashed_password = pwd_context.hash(user.password)
+    user.password = hashed_password
+
     new_user = models.User(**user.model_dump())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
-
-
