@@ -1,24 +1,27 @@
 from pydantic import BaseModel, Strict, Field, EmailStr
 from typing import Optional
 from datetime import datetime
+
+
 class PostBase(BaseModel):
-    title: str 
+    title: str
     content: str
     published: bool = True
-    # rating: Optional[int] = Field(strict=True, default=None) 
+    # rating: Optional[int] = Field(strict=True, default=None)
+
 
 class Post(PostBase):
     id: int
-    # title: str 
+    # title: str
     # content: str
     # published: bool = True
-    created_at : datetime
+    created_at: datetime
 
 
-class UserCreate(BaseModel): 
+class UserCreate(BaseModel):
     email: EmailStr
-    password: str 
-    created_at : datetime = datetime.utcnow()
+    password: str
+    created_at: datetime = datetime.utcnow()
 
     # @model_validator(mode='after')
     # def check_passwords_match(self) -> 'UserModel':
@@ -37,11 +40,11 @@ class UserCreate(BaseModel):
     #         raise ValueError("The two passwords did not match.")
     #     return values
 
-class UserOut(BaseModel): 
-    id:int
+
+class UserOut(BaseModel):
+    id: int
     email: EmailStr
     created_at: datetime
 
     # class Config:
     #     orm_mode = True
-    
