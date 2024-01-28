@@ -10,7 +10,9 @@ from decouple import config
 import models
 from database import engine, get_db
 from typing import List
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -82,7 +84,7 @@ async def get_posts(db: Session = Depends(get_db)):
     return posts
 
 # create post
-@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model = Post)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model = Post, response_model_exclude=["title", "content"])
 # async def create_posts(payload: dict = Body(...)):
 async def create_posts(post: PostBase, db: Session = Depends(get_db)):
     # * %s protects us from SQL injections
@@ -103,11 +105,12 @@ async def create_posts(post: PostBase, db: Session = Depends(get_db)):
     # )
     # Let's say we have 50 fields in the Model, and it is not a good approach to pass 50 values to the model
     # what we can do it, we can unpack the post(pydantic) dictionary and pass directly to the Post Model
-    new_post = models.Post(**post.model_dump(exclude="rating"))
+    new_post = models.Post(**post.model_dump())
 
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
+    ic(new_post)
     ic(type(new_post))
     ic(new_post.title)
     return new_post # FastAPI directly converts this into JSON
@@ -192,3 +195,5 @@ async def create_posts(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
