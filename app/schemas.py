@@ -18,6 +18,8 @@ class Post(PostBase):
 class UserCreate(BaseModel): 
     email: EmailStr
     password: str 
+    created_at : datetime = datetime.utcnow()
+
     # @model_validator(mode='after')
     # def check_passwords_match(self) -> 'UserModel':
     #     pw1 = self.password1
@@ -35,9 +37,10 @@ class UserCreate(BaseModel):
     #         raise ValueError("The two passwords did not match.")
     #     return values
 
-class UserOut(UserCreate): 
+class UserOut(BaseModel): 
     id:int
     email: EmailStr
+    created_at: datetime
 
     # class Config:
     #     orm_mode = True
