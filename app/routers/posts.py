@@ -11,7 +11,7 @@ import models
 from database import get_db
 from typing import List
 import utils
-
+import oauth
 
 router = APIRouter( prefix= "/posts", tags=["Posts"])
 
@@ -19,7 +19,7 @@ router = APIRouter( prefix= "/posts", tags=["Posts"])
 # we can use List from typing library and we can also use list[Post] from python directly
 # Reference: https://fastapi.tiangolo.com/tutorial/response-model/#response_model-parameter
 @router.get("/", response_model=List[Post])
-async def get_posts(db: Session = Depends(get_db)):
+async def get_posts(db: Session = Depends(get_db), user_id = Depends(oauth.get_current_user)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
@@ -35,7 +35,7 @@ async def get_posts(db: Session = Depends(get_db)):
     response_model_exclude=["title", "content"],
 )
 # async def create_posts(payload: dict = Body(...)):
-async def create_posts(post: PostBase, db: Session = Depends(get_db)):
+async def create_posts(post: PostBase, db: Session = Depends(get_db), user_id = Depends(oauth.get_current_user)):
     # * %s protects us from SQL injections
     # We can write query like INSERT INTO posts (title, content, published) VALUSE ({title}, {content}, {published})
     # using the f string but some user can pass the SQL statements directly into these variables
@@ -66,7 +66,7 @@ async def create_posts(post: PostBase, db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=Post)
-async def get_posts(id: int, response: Response, db: Session = Depends(get_db)):
+async def get_posts(id: int, response: Response, db: Session = Depends(get_db), user_id = Depends(oauth.get_current_user)):
     # We cannot use VALUES keyword in the select statement, this is against SQL syntax.
     # VALUES keyword is specifically designed for the INSERT Statements
     # cursor.execute("SELECT * FROM posts WHERE id = (%s)", (id,))
@@ -93,7 +93,7 @@ async def get_posts(id: int, response: Response, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), user_id = Depends(oauth.get_current_user)):
     # cursor.execute("DELETE FROM posts WHERE id = (%s) RETURNING *", (id,))
     # deleted_post = cursor.fetchone()
     # conn.commit()
@@ -113,7 +113,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK, response_model=Post)
-def update_post(id: int, post: PostBase, db: Session = Depends(get_db)):
+def update_post(id: int, post: PostBase, db: Session = Depends(get_db), user_id = Depends(oauth.get_current_user)):
     # cursor.execute(
     #     "UPDATE posts SET title=%s, content = %s, published = %s WHERE id = %s RETURNING *",
     #     (post.title, post.content, post.published, id),

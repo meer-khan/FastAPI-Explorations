@@ -11,7 +11,7 @@ import models
 from database import engine, get_db
 from typing import List
 import utils
-from routers import users, posts
+from routers import users, posts, auth
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -77,3 +77,4 @@ async def root():
 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)
